@@ -1,0 +1,24 @@
+I did this on Ubuntu 22.04 with Docker version 20.10.12.
+First you need to install buildx
+wget https://github.com/docker/buildx/releases/download/v0.4.1/buildx-v0.4.1.linux-amd64
+chmod a+x buildx-v0.4.1.linux-amd64
+mkdir -p ~/.docker/cli-plugins
+mv buildx-v0.4.1.linux-amd64 ~/.docker/cli-plugins/docker-buildx
+Confirm that this first step works, by doing:  docker buildx version
+If that stage doesn't work by confiming the version of buildx, then you can't proceed
+Once buildx is installed, do:
+docker buildx create --name mybuilder --driver docker-container
+docker buildx use mybuilder
+Then create a small Dockerfile to test your multiplatform build:
+vi Dockerfile
+copy and paste this into the Dockerfile and save:
+# syntax=docker/dockerfile:1
+FROM alpine:3.16
+RUN apk add curl
+Then login into you dockerhub, if you havn't done so already:
+docker login -u <dockerhub_username> -p <dockerhub_password>
+Build and push to dockerhub:
+docker buildx build . --platform linux/amd64,linux/arm64,linux/arm/v7 -t <dockerhub_username>/<your_imagename>:latest --push
+Finally, inspect your image and confirm you have at least three platforms:
+docker buildx imagetools inspect <dockerhub_username>/<your_imagename>:latest
+You should something like that when you run that last command. That's my own Ubuntu screenshot
